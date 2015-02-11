@@ -29,7 +29,7 @@ try:
 
     for (name, tso) in queries:
         first = True
-        with open("hash_"+name, 'a') as output: #change to 'a'
+        with open("hash_"+name, 'a') as output:
             for tweet in ts.search_tweets_iterable(tso):
                 output.write(tweet['text'].replace('\n', ' ')+"\n")
                 if first:

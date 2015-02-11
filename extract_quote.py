@@ -1,7 +1,7 @@
-# -*- coding: latin-1 -*-
+# -*- coding: utf_8 -*-
 import re
 import sys
-
+import io
 
 class extract_quote:
 
@@ -13,45 +13,62 @@ class extract_quote:
 		#Q: quotation mark
 		#At: attribution
 		#Ap: apostrophe
-		#Patterns: "xxx" -At, "nonsense xxx nonsense", "xxx" y, y "xxx",  
+		#Patterns: "xxx" -At, "nonsense "xxx" nonsense", "xxx" y, y "xxx",  
 
 		reEllipse = re.compile('.*\.\.\.$')
 		regexs = []
 		#quotations, attribution
-		reQAt = re.compile('[^\"“”]*[\"“]([^\"“”]+)[\"”]\s*[-~–—]^\"“”]+') #"xxx" - me
+		reQAt = re.compile(u'[^\"]*[\"]+(.*\\S.*)[\"]+\\s*[-~–—].+$') #"xxx" - me
+
 		regexs.append(reQAt)
+		reQAt2 = re.compile(u'[\"][^\"]+[\"]+([^\"]+)[\"]+[^\"]+[\"]$') #"nonsense "xxx" nonsense"
+		regexs.append(reQAt2)
 		#apostrophes, attribution
-		reApAt = re.compile('[^\"“”]*[\'‘]([^\"“”\'’‘]+)[\'’]\s*[-~–—]^\"“”\'’‘]+') #'xxx' - me
+		reApAt = re.compile(u'[^\"]*[\']+([^\"\']+)[\']+\s*[-~–—][^\"\']+$') #'xxx' - me
 		regexs.append(reApAt)
 		#quotations
-		reQ1 = re.compile('[^\"“”]*[\"]([^\"“”]+)[\"][^\"“”]+') #"xxx" y
+		reQ1 = re.compile(u'[^\"]*[\"]+([^\"]+)[\"]+[^\"]+$') #"xxx" y
 		regexs.append(reQ1)
-		reQ2= re.compile('[^\"“”]*[“]([[^\"“”]+)[”][^\"“”]+') #"xxx" y
-		regexs.append(reQ2)
-		reQ3 = re.compile('[^\"“”]+[\"]([^\"“”]+)[\"][^\"“”]*') #y "xxx"
+		reQ3 = re.compile(u'[^\"]+[\"]+([^\"]+)[\"]+[^\"]*$') #y "xxx"
 		regexs.append(reQ3)
-		reQ4= re.compile('[^\"“”]+[“]([[^\"“”]+)[”][^\"“”]*') #y "xxx"
-		regexs.append(reQ4)
 		#apostrophes
-		reAp1 = re.compile('[^\"“”’‘]*[‘]([^\"“”’‘]+)[’][^\"“”’‘]+') #'xxx' y
+		reAp1 = re.compile(u'[^\"]*\'\'+([^\"]+)\'\'+[^\"]+$') #'xxx' y
 		regexs.append(reAp1)
-		reAp2 = re.compile('[^\"“”’‘]+[‘]([^\"“”’‘]+)[’][^\"“”’‘]*') #y 'xxx'
+		reAp2 = re.compile(u'[^\"]+\'\'+([^\"]+)\'\'+[^\"]*$') #y 'xxx'
 		regexs.append(reAp2)
 
-		with open(output_file, 'w') as extracted_file:	
-			for quote in open(input_file):
-				
-				if reEllipse.match(quote)==None:
-					already_matched = False
-					for regex in regexs:
+		regexs.append(re.compile(u'[^\"«»]*[«»]+([^»\"«]+)[«»]+[^\"»«]+$')) #«xxx» y
+		regexs.append(re.compile(u'[^\"«»]+[«»]+([^»\"«]+)[«»]+[^\"»«]*$')) #y «xxx»
+		
+		regexs.append(re.compile(u'\\s*#Quote\\s*\\d+\\s*[-~–—:]\\s*([^.]+[.])[^.]*$')) #Quote \\d+ - xxx. nonsense
+
+		# #quote xxx .
+		reAlone =  re.compile(u'#quote:?([^\".!?]+)[.!?]$') # #quote xxx.
+		regexs.append(reAlone)
+
+		regexs.append(re.compile(u'\\s*([^.]+\\S[^.]*[.])(\\S+\\s+)?(\\S[.]\\s+)?(\\S+\\s*)?(#[qQ]uote.*)?$')) # xxx. name i. name? #quote
+		regexs.append(re.compile(u'\\s*([^-~–—]+\\S[^-~–—]*)[-~–—]\\s*(\\S+\\s+)?(\\S[.]\\s+)?(\\S+\\s*)?(#[qQ]uote.*)?$')) # xxx- name i. name? #quote
+		regexs.append(re.compile(u'\\s*#[Qq]uote\\s+([^.!]+\\S[^.]*[.!])\\s*(\\S+\\s+)?(\\S[.]\\s+)?(\\S+\\s*)?(#\\S+\\s*)*$')) # #quote xxx. name i. name?
+		# regexs.append(re.compile(u'\\s*([^#]+)(#\\S+\\s+)*#\\S+\\s*$')) # xxx. #y #z #t...
+
+
+
+
+		with io.open(output_file, 'w', encoding='utf-8') as extracted_file:	
+			with io.open("not_catching", 'w', encoding='utf-8') as not_catching:	
+				for quote in open(input_file):	
+					quote = unicode(quote, 'utf-8')
+					if reEllipse.match(quote)==None:
+						already_matched = False
+						for regex in regexs:
+							if not already_matched:
+								match = regex.match(quote)
+								if match!=None:
+									quote = match.group(1)+'\n'
+									extracted_file.write(quote)
+									already_matched = True
 						if not already_matched:
-							match = regex.match(quote)
-							if match!=None:
-								quote = match.group(1)+'\n'
-								extracted_file.write(quote) #remove
-								already_matched = True
-					if not already_matched:
-						print(quote)
+							not_catching.write(quote)
 
 
 	if  __name__ =='__main__':main(sys.argv[1:])
