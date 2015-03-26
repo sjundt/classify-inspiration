@@ -44,6 +44,7 @@ public class WriteDictionary {
 	protected Map<String, Integer> dictionaryMap;
 	protected String fileExt;
 	String sentence;
+	boolean removeUniqueUni, removeUniqueBi, removeBiFromDoubleUniRemoved;
 
 
 	/**
@@ -52,12 +53,15 @@ public class WriteDictionary {
 	 * @param inputFiles
 	 *            - files of quotations
 	 */
-	public WriteDictionary(List<String> inputFiles, double uniFrac, double biFrac) {
+	public WriteDictionary(List<String> inputFiles, double uniFrac, double biFrac, boolean removeUniqueUni, boolean removeUniqueBi, boolean removeBiFromDoubleUniRemoved) {
 		vocabulary = new HashSet<String>();
 		bigramVocabulary = new HashSet<String>();
 		uniqueVocab = new HashSet<String>();
 		uniqueBigrams = new HashSet<String>();
 		dictionaryMap = new HashMap<String, Integer>();
+		this.removeUniqueBi = removeUniqueBi;
+		this.removeUniqueUni = removeUniqueUni;
+		this.removeBiFromDoubleUniRemoved = removeBiFromDoubleUniRemoved;
 		
 		getDictionary(inputFiles, uniFrac, biFrac);
 		// writePOSDictionary(posDataFiles);
@@ -104,13 +108,16 @@ public class WriteDictionary {
 
 		}
 		//remove unique word
-		for (String word : unique) {
-			dictionaryMap.remove(word);
-			removedWordsFile.println(word);
-			removed.add(word);
+		if ((isUnigrams && removeUniqueUni) || (!isUnigrams && removeUniqueBi)){
+			for (String word : unique) {
+				dictionaryMap.remove(word);
+				removedWordsFile.println(word);
+				removed.add(word);
+			}
 		}
+		
 
-		if (!isUnigrams){ 
+		if (!isUnigrams && removeBiFromDoubleUniRemoved){ 
 			for (String gram: map.keySet()){
 				String[] words = gram.split(" ");
 				if (words.length!=2){
@@ -158,6 +165,7 @@ public class WriteDictionary {
 			}
 			writer.close();
 
+			System.out.println("Unigrams %: "+commonFractionUni+". Bigrams %: "+commonFractionBi+". uniqueUniRemoved: "+removeUniqueUni+". uniqueBiRemoved: "+removeUniqueBi+". bigramsRemovedIfBothWordsRemoved: "+removeBiFromDoubleUniRemoved);
 			System.out.println("Total Vocabulary Size (Unigrams): "+unigrams.keySet().size());
 			System.out.println("Removed Unigrams (Most frequent "+STOP_LIST_PARAM+"/1 & unique words): "+removedWords.size());
 			System.out.println("Unigrams used as features: "+(unigrams.keySet().size()-removedWords.size()));
@@ -281,17 +289,17 @@ public class WriteDictionary {
 
 	/**
 	 * Writes out the dictionary file for the input files
-	 * args- training file, top% stoplist unigrams, top% stoplist bigrams
+	 * args- training file, top% stoplist unigrams, top% stoplist bigrams, removeUniqueUni, removeUniqueBi, removeBiFromDoubleUniRemoved
 	 */
 	public static void main(String[] args) {
-		if (args.length<3){
-			throw new RuntimeException("Too few arguments. Please indicate a training file, double for unigrams, double for bigrams");
+		if (args.length<6){
+			throw new RuntimeException("Too few arguments. Please indicate a training file, double for unigrams, double for bigrams, three flags for removal");
 		}
 		List<String> inputFiles = new ArrayList<String>();
 		//first_pass: dictionary
 		inputFiles.add(args[0]);
 		List<String> posDataFiles = new ArrayList<String>();
-		new WriteDictionary(inputFiles, Double.parseDouble(args[1]), Double.parseDouble(args[2]));
+		new WriteDictionary(inputFiles, Double.parseDouble(args[1]), Double.parseDouble(args[2]), args[3].equals("1"), args[4].equals("1"), args[5].equals("1"));
 	}
 
 }
