@@ -1,3 +1,16 @@
 access
 .DS_Store
 .swp
+data/
+overheard*
+last_collected*
+hash*
+.pl
+not_catching
+*dataset*
+nonsense*
+pos*
+data*
+svm2weight.pl
+inspiration.*
+
