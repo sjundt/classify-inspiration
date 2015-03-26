@@ -1,3 +1,4 @@
+.gitignore
 access
 .DS_Store
 .swp
@@ -13,5 +14,6 @@ pos*
 data*
 svm2weight.pl
 inspiration.*
-.class
+*.class
+tmp
 

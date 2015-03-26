@@ -30,17 +30,21 @@ public class WriteDictionary {
 	public static final String DATA_DIR_STRING = "data/";
 	public static final String DICTIONARY_FILE_STRING = DATA_DIR_STRING+"dictionary.txt";
 	public static final String REMOVED_UNIGRAM_FILE_STRING = DATA_DIR_STRING+"removed_unigrams.txt";
+	public static final String REMOVED_BIGRAM_FILE_STRING = DATA_DIR_STRING+"removed_bigrams.txt";
 	public static final String POS_DICTIONARY = DATA_DIR_STRING+"pos_dictionary.txt";
 	public static final String POS_PATTERN_STRING = "(\\S+)/(\\S+)$";
 	protected HashMap<String, Integer> unigrams = new HashMap<String, Integer>();
+	protected HashMap<String, Integer> bigrams = new HashMap<String, Integer>();
 	protected Set<String> vocabulary;
+	protected Set<String> bigramVocabulary;
 	protected Set<String> uniqueVocab;
+	protected Set<String> uniqueBigrams;
+	Set<String> removedWords= new HashSet<String>();
 	protected Map<String, Integer> dictionaryMap;
-	protected int maxUnigrams;
 	protected String fileExt;
 	String sentence;
-	Integer totalVocabSize, endGramSize;
 	Integer removedVocabSize= 0;
+	Integer removedBigramsSize = 0;
 
 	/**
 	 * Creates dictionary file
@@ -50,11 +54,80 @@ public class WriteDictionary {
 	 */
 	public WriteDictionary(List<String> inputFiles) {
 		vocabulary = new HashSet<String>();
+		bigramVocabulary = new HashSet<String>();
 		uniqueVocab = new HashSet<String>();
+		uniqueBigrams = new HashSet<String>();
 		dictionaryMap = new HashMap<String, Integer>();
 		
 		getDictionary(inputFiles, STOP_LIST_PARAM);
 		// writePOSDictionary(posDataFiles);
+	}
+
+
+	private void removeStopWords(double commonFraction, boolean isUnigrams) throws IOException{
+		String outputFile;
+		HashMap<String, Integer> map;
+		Set<String> unique;
+		if (isUnigrams){
+			outputFile = REMOVED_UNIGRAM_FILE_STRING;
+			map = unigrams;
+			unique = uniqueVocab;
+		} else {
+			outputFile = REMOVED_BIGRAM_FILE_STRING;
+			map = bigrams;
+			unique = uniqueBigrams;
+		}
+
+
+		TreeMap<Double, String> sorted = new TreeMap<Double, String>(
+					Collections.reverseOrder());
+		PrintWriter removedWordsFile = new PrintWriter(new FileWriter(outputFile));
+
+		for (String k : map.keySet()) {
+			Double thisDouble = map.get(k) + 0.0;
+			while (sorted.containsKey(thisDouble)) {
+				thisDouble = thisDouble + 0.00000000001;
+			}
+			sorted.put(thisDouble, k);
+		}
+		//remove most common words
+
+		for (int i = 0; i < map.size() * commonFraction; i++) {
+			Entry<Double, String> next = sorted.pollFirstEntry();
+			removedWordsFile.println(next.getKey()+": "+next.getValue());
+			sorted.remove(next.getKey());
+			dictionaryMap.remove(next.getValue());
+			if (isUnigrams){
+				removedVocabSize +=1;
+				removedWords.add(next.getValue());
+			} else {
+				removedBigramsSize+=1;
+			}
+		}
+		//remove unique word
+		for (String word : unique) {
+			dictionaryMap.remove(word);
+			removedWordsFile.println(word);
+			if (isUnigrams){
+				removedWords.add(word);
+			} else {
+				removedBigramsSize+=1;
+			}
+		}
+
+		if (!isUnigrams){ 
+			for (String gram: map.keySet()){
+				String[] words = gram.split(" ");
+				if (words.length!=2){
+					throw new RuntimeException("Non-bigram in bigrams map");
+				} else if (removedWords.contains(words[0]) && removedWords.contains(words[1])){
+					removedWordsFile.println(gram);
+					dictionaryMap.remove(gram);
+					removedBigramsSize+=1;
+				}
+			}
+		}
+		removedWordsFile.close();
 	}
 
 	/**
@@ -70,7 +143,6 @@ public class WriteDictionary {
 		try {
 			BufferedReader reader;
 			String sentence, text;
-			PrintWriter removedUnigrams = new PrintWriter(new FileWriter(REMOVED_UNIGRAM_FILE_STRING));
 
 			for (String inputFile : inputFiles) {
 				reader = new BufferedReader(new FileReader(inputFile));
@@ -79,48 +151,11 @@ public class WriteDictionary {
 				}
 				reader.close();
 			}
-			TreeMap<Double, String> sorted = new TreeMap<Double, String>(
-					Collections.reverseOrder());
+			
+			removeStopWords(commonFraction, true);
+			removeStopWords(commonFraction, false);
 
-			totalVocabSize = unigrams.keySet().size();
-			for (String k : unigrams.keySet()) {
-				Double thisDouble = unigrams.get(k) + 0.0;
-				while (sorted.containsKey(thisDouble)) {
-					thisDouble = thisDouble + 0.00000000001;
-				}
-				sorted.put(thisDouble, k);
-			}
-			//remove most common words
-			Set<String> removedWords = new HashSet<String>();
-			for (int i = 0; i < unigrams.size() * commonFraction; i++) {
-				Entry<Double, String> next = sorted.pollFirstEntry();
-				removedUnigrams.println(next.getKey()+": "+next.getValue());
-				sorted.remove(next.getKey());
-				dictionaryMap.remove(next.getValue());
-				removedWords.add(next.getValue());
-				removedVocabSize +=1;
-			}
-			//remove unique words
-			removedUnigrams.close();
-			for (String word : uniqueVocab) {
-				dictionaryMap.remove(word);
-				removedWords.add(word);
-			}
-			// List<String> bigramsToRemove = new ArrayList<String>();
-			// for (String gram: dictionaryMap.keySet()){
-			// 	String[] words = gram.split(" ");
-			// 	if (words.length==2){
-			// 		if (removedWords.contains(words[0]) || removedWords.contains(words[1])){
-			// 			bigramsToRemove.add(gram);
-			// 		}
-			// 	}
-			// }
-			// //remove bigrams that have unigrams we've removed
-			// for (String bigram: bigramsToRemove){
-			// 	dictionaryMap.remove(bigram);
-			// }
 			removedVocabSize+=uniqueVocab.size();
-			endGramSize = dictionaryMap.keySet().size();
 
 			// write out dictionary
 			PrintWriter writer = new PrintWriter(new FileWriter(
@@ -129,12 +164,13 @@ public class WriteDictionary {
 				writer.println(word + ":" + dictionaryMap.get(word));
 			}
 			writer.close();
-			removedUnigrams.close();
 
-			System.out.println("Total Vocabulary Size (Unigrams): "+totalVocabSize);
+			System.out.println("Total Vocabulary Size (Unigrams): "+unigrams.keySet().size());
 			System.out.println("Removed Unigrams (Most frequent "+STOP_LIST_PARAM+"/1 & unique words): "+removedVocabSize);
-			System.out.println("Unigrams used as features: "+(totalVocabSize-removedVocabSize));
-			System.out.println("Bigrams used as features: "+(endGramSize-(totalVocabSize-removedVocabSize)));
+			System.out.println("Unigrams used as features: "+(unigrams.keySet().size()-removedVocabSize));
+			System.out.println("Total Bigrams: "+bigrams.keySet().size());
+			System.out.println("Bigrams used as features: "+(bigrams.keySet().size()-removedBigramsSize));
+			System.out.println("Total features: "+(dictionaryMap.keySet().size()));
 
 
 		} catch (IOException e) {
@@ -187,15 +223,13 @@ public class WriteDictionary {
 		List<String> words = getWords(text);
 		// unigrams
 		for (String word : words) {
-			addToVocab(word);
+			addToVocab(word, unigrams, vocabulary, uniqueVocab);
 		}
 		//bigrams
 		for(int i = 0; i<words.size()-1;i++){
 			int size = dictionaryMap.size();
 			String bigram = words.get(i)+" "+words.get(i+1);
-			if(!dictionaryMap.containsKey(bigram)){
-				dictionaryMap.put(words.get(i)+" "+words.get(i+1), size+1);
-			}
+			addToVocab(bigram, bigrams, bigramVocabulary, uniqueBigrams);
 		}
 	}
 
@@ -207,21 +241,20 @@ public class WriteDictionary {
 	 * 
 	 * @param word- word to add to vocab
 	 */
-	private void addToVocab(String word) {
+	private void addToVocab(String word, HashMap<String, Integer> map, Set<String> voc, Set<String> uniqueVoc) {
 
-		int count = unigrams.get(word) == null ? 0 : unigrams.get(word);
-		unigrams.put(word, count + 1);
+		int count = map.get(word) == null ? 0 : map.get(word);
+		map.put(word, count + 1);
 
 		// since is set, add(word) returns true if successfully added, false if
 		// already there
-		if (vocabulary.add(word)) {
-			uniqueVocab.add(word);
+		if (voc.add(word)) {
+			uniqueVoc.add(word);
 			dictionaryMap.put(word, dictionaryMap.size() + 1);
 		} else {
-			uniqueVocab.remove(word); // not actually unique, because already in
+			uniqueVoc.remove(word); // not actually unique, because already in
 										// set of vocab
 		}
-		maxUnigrams = dictionaryMap.size();
 	}
 
 	/**
