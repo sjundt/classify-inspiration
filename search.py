@@ -14,8 +14,10 @@ def getOrder(tag, filename):
 
 try:
     tsoOverheard = getOrder('#overheard', "last_collected_overheard")
-    tsoQuote = getOrder('#quote', "last_collected_quote")
-    queries = [('overheard',tsoOverheard), ('quote',tsoQuote)]
+    #tsoQuote = getOrder('#quote', "last_collected_quote")
+    #tsoInspiration = getOrder('#inspiration', "last_collected_inspiration")
+    #queries = [('overheard',tsoOverheard), ('quote',tsoQuote), ('inspiration', tsoInspiration)]
+    queries = [('overheard', tsoOverheard)]
 
     # it's about time to create a TwitterSearch object with our secret tokens
     with open('access') as access_file:

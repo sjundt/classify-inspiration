@@ -23,7 +23,7 @@ class clean_quotes:
 		regexs.append(re.compile('(\\s*)(.*\\S.*)\\s*(#\\S+\\s+)+(#\\S+\\s*)+$')) # multiple hashtags at end
 
 		# get rid of attributions
-		regexs.append(re.compile('(\\s*)([^.]+\\S[^.]*[.])(\\S+\\s+)?(\\S+\\s+)?(\\S+\\s*)?(#\\S*\\s*)*$')) # xxx. name name name? #tag #tag ....
+		regexs.append(re.compile('(\\s*)([^.]+[.])\\s*(#\\S*\\s*)*(\\S+\\s+)?(\\S+\\s+)?(\\S+\\s*)?(#\\S*\\s*)*$')) # xxx. name name name? #tag #tag ....
 		regexs.append(re.compile('(\\s*)(\\S.*)[-~–—]+\\s*(\\S+\\s+)?(\\S+\\s+)?(\\S+\\s*)?(#\\S*\\s*)*\\s*$')) # xxx- name name name? #tag #tag ...
 
 		#deal with #... : quotation
@@ -58,8 +58,9 @@ class clean_quotes:
 				match_strip = re.compile('\\s*([:–„«❝‘`|~„”\"\'-.()/]|\\d)+\\s*([^\"%].*\\S)$').match(quote)
 				if match_strip!=None:
 					quote = match_strip.group(2)+'\n'
-				if re.compile('(^\()|(#[Qq]uote)|(^(\\s*\\S*\\s*\\S*\\s*\\S*\\s*)?$)').match(quote)==None: #starts w/ ( or contains #quote or is <=3 words
-					extracted_file.write(quote.lstrip().lower())
+				if re.compile('(^\()|(^\\s*(ll|re|s|t|m|ve|d)\\s+)|((#|\\s)[Qq]uote\\s)|(^(\\s*\\S*\\s*\\S*\\s*\\S*\\s*)?$)').match(quote)==None: #starts w/ (|ll or contains #quote or is <=3 words
+					quote = re.sub('\\s\\s\\s*',' ',quote.lstrip().lower())
+					extracted_file.write(quote)
 						
 
 

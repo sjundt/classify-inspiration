@@ -32,9 +32,9 @@ class extract_quote:
 		reQ3 = re.compile(u'[^\"]+[\"]+([^\"]+)[\"]+[^\"]*$') #y "xxx"
 		regexs.append(reQ3)
 		#apostrophes
-		reAp1 = re.compile(u'[^\"]*\'\'+([^\"]+)\'\'+[^\"]+$') #'xxx' y
+		reAp1 = re.compile(u'[^\"]*\'+([^\"]+)\'+[^\"]+$') #'xxx' y
 		regexs.append(reAp1)
-		reAp2 = re.compile(u'[^\"]+\'\'+([^\"]+)\'\'+[^\"]*$') #y 'xxx'
+		reAp2 = re.compile(u'[^\"]+\'+([^\"]+)\'+[^\"]*$') #y 'xxx'
 		regexs.append(reAp2)
 
 		regexs.append(re.compile(u'[^\"«»]*[«»]+([^»\"«]+)[«»]+[^\"»«]+$')) #«xxx» y
@@ -46,11 +46,15 @@ class extract_quote:
 		reAlone =  re.compile(u'#quote:?([^\".!?]+)[.!?]$') # #quote xxx.
 		regexs.append(reAlone)
 
-		regexs.append(re.compile(u'\\s*([^.]+\\S[^.]*[.])(\\S+\\s+)?(\\S[.]\\s+)?(\\S+\\s*)?(#[qQ]uote.*)?$')) # xxx. name i. name? #quote
-		regexs.append(re.compile(u'\\s*([^-~–—]+\\S[^-~–—]*)[-~–—]\\s*(\\S+\\s+)?(\\S[.]\\s+)?(\\S+\\s*)?(#[qQ]uote.*)?$')) # xxx- name i. name? #quote
-		regexs.append(re.compile(u'\\s*#[Qq]uote\\s+([^.!]+\\S[^.]*[.!])\\s*(\\S+\\s+)?(\\S[.]\\s+)?(\\S+\\s*)?(#\\S+\\s*)*$')) # #quote xxx. name i. name?
+		regexs.append(re.compile(u'\\s*([^.!]+[.!])\\s*(#\\S*\\s*)*(\\S+\\s+)?(\\S+\\s+)?(\\S+\\s*)?(#\\S*\\s*)*$')) # xxx. name name name? #tag #tag ....
+		regexs.append(re.compile(u'\\s*([^.!]+[.!])\\s*[-~–—]+.*$')) # xxx. - ...
+
+		regexs.append(re.compile(u'\\s*(\\S.*)[-~–—]+\\s*(\\S+\\s+)?(\\S+\\s+)?(\\S+\\s*)?(#\\S*\\s*)*\\s*$')) # xxx- name name name? #tag #tag ...
+		regexs.append(re.compile(u'\\s*#[Qq]uote\\s+([^.!]+[.!])\\s*(\\S+\\s+)?(\\S+\\s+)?(\\S+\\s*)?(#\\S+\\s*)*$')) # #quote xxx. name name name?
 		# regexs.append(re.compile(u'\\s*([^#]+)(#\\S+\\s+)*#\\S+\\s*$')) # xxx. #y #z #t...
 
+		# #quote .x.x.x. . <three words or hashtags
+		regexs.append(re.compile(u'\\s*([^-~–—:].*[.])\\s*(#\\S*\\s*)*([^. ]+\\s+){0,3}(#\\S*\\s*)*$'))
 
 
 
