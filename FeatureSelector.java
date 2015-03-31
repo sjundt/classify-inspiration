@@ -61,7 +61,7 @@ public class FeatureSelector {
 		this.featureFlags = featureFlags;
 		readDictionary();
 		posPattern = Pattern.compile("(\\S+)\\s*:\\s*(\\d+)$"); 
-		// writeFeatures(fileBase+TRAIN_FILE_EXT, fileBase+TRAIN_FILE_EXT+POS_FILE_EXT, true);
+		writeFeatures(fileBase+TRAIN_FILE_EXT, fileBase+TRAIN_FILE_EXT+POS_FILE_EXT, true);
 		writeFeatures(fileBase+TEST_FILE_EXT, fileBase+TEST_FILE_EXT+POS_FILE_EXT, false);
 	}
 

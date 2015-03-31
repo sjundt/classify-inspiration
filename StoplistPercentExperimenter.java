@@ -32,7 +32,6 @@ public class StoplistPercentExperimenter {
 			doubles.add(0.01);
 			doubles.add(0.05);
 			doubles.add(0.1);
-			doubles.add(0.20);
 			for(double uni: doubles) {
 				for (double bi: doubles){
 					String[] writeDictionaryInput = new String[NUM_FEATURES+3];
