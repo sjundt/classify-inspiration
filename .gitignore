@@ -16,4 +16,5 @@ svm2weight.pl
 inspiration.*
 *.class
 tmp
+*.model
 
