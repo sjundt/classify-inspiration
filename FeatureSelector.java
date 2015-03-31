@@ -43,6 +43,7 @@ public class FeatureSelector {
 	Matcher match;
 	HashMap<String,Set<String>> sentimentLists;
 	List<String> posFeatures;
+	boolean startsWithVerb;
 
 
 	/**
@@ -60,7 +61,7 @@ public class FeatureSelector {
 		this.featureFlags = featureFlags;
 		readDictionary();
 		posPattern = Pattern.compile("(\\S+)\\s*:\\s*(\\d+)$"); 
-		writeFeatures(fileBase+TRAIN_FILE_EXT, fileBase+TRAIN_FILE_EXT+POS_FILE_EXT, true);
+		// writeFeatures(fileBase+TRAIN_FILE_EXT, fileBase+TRAIN_FILE_EXT+POS_FILE_EXT, true);
 		writeFeatures(fileBase+TEST_FILE_EXT, fileBase+TEST_FILE_EXT+POS_FILE_EXT, false);
 	}
 
@@ -154,7 +155,7 @@ public class FeatureSelector {
 
 			//sentiment words: read in
 			sentimentLists = new HashMap<String,Set<String>>();
-			if (featureFlags[2]){
+			if (featureFlags[2] || featureFlags[5]){
 				pattern = Pattern.compile("(\\S+)\t(\\S+)\t1"); 
 				reader = new BufferedReader(new FileReader(SENTIMENT_DATA_FILE));
 				while ((sentence = reader.readLine()) != null) {
@@ -260,14 +261,34 @@ public class FeatureSelector {
 					nextIndex = 1;
 				}
 
+				//sentiment
 				if (featureFlags[2]){
 					writeSentiment();
 				}
 
+				String[] wordPOSList = posString.split("\\s");
 				//POS tags
 				if (featureFlags[3]){
-					writePOS(posString);
+					writePOS(wordPOSList);
 				}
+			
+				//starts w/ verb
+				if (featureFlags[4]){
+					if (wordPOSList[0].equals("true")){
+						featureW.print(nextIndex+":1 ");
+					} 
+					nextIndex++;
+				}
+
+				//whether it has negative, then positive sentiment
+				if (featureFlags[5]){
+					if (negPos(words)){
+						featureW.print(nextIndex+":1 ");
+					}
+					nextIndex++;	
+				}
+
+
 				featureW.print("\n");
 			}
 			reader.close();
@@ -281,12 +302,24 @@ public class FeatureSelector {
 
 	}
 
+	private boolean negPos(List<String> words){
+		boolean neg = false;
+		for (String word: words){
+			if (!neg && sentimentLists.get("negative").contains(word)){
+				neg = true;
+			} else if (neg && sentimentLists.get("positive").contains(word)){
+				return true;
+			}
+		}
+		return false;
+	}
 
-	private void writePOS(String posString){
+	private void writePOS(String[] wordPOSList){
 		HashMap<String,Integer> numPOS = new HashMap<String,Integer>();
 
-		String[] wordPOSList = posString.split("\\s");
-		for (int i= 0; i < wordPOSList.length; i++){
+		
+
+		for (int i= 1; i < wordPOSList.length; i++){
 			String wordPOS = wordPOSList[i];
 			match = posPattern.matcher(wordPOS);
 			if (!match.matches()){
@@ -315,11 +348,11 @@ public class FeatureSelector {
 	}
 
 	/**
-	 * returns a List of strings that are the items in the YikYak, split on
+	 * returns a List of strings that are the items in the quote, split on
 	 * whitespace
 	 * 
 	 * @param text- text to be split into words
-	 * @return list of strings of words in YikYak
+	 * @return list of strings of words in quote
 	 */
 	public static List<String> getWords(String text) {
 		// text = text.trim(); // eliminate trailing whitespace (which for some
@@ -350,6 +383,8 @@ public class FeatureSelector {
 	 * 				1: bigrams
 	 * 				2: sentiment categories
 	 * 				3: POS
+	 * 				4: Begins w/ verb
+	 * 				5: sentiment negative, then positive
 	 */
 	public static void main(String[] args) {
 		final int NUM_ARGS_BEFORE_FEATURE = 1;

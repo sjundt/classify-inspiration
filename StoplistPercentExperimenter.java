@@ -10,7 +10,7 @@ import java.util.*;
  *
  */
 public class StoplistPercentExperimenter {
-	
+	private static final int NUM_FEATURES = 6;
 	/**
 	 * get dictionaries, gets featureFiles, train a model, and for each model,
 	 * run time and rand testing sets. Output results in results file.
@@ -23,6 +23,8 @@ public class StoplistPercentExperimenter {
 			String subsetString;
 			BufferedReader reader;
 			writer = new PrintWriter(new FileWriter(args[0]+".stoplist_percent_experiment_results.txt"));
+			
+
 			List<Double> doubles = new ArrayList<Double>();
 			doubles.add(0.0);
 			doubles.add(0.001);
@@ -33,7 +35,7 @@ public class StoplistPercentExperimenter {
 			doubles.add(0.20);
 			for(double uni: doubles) {
 				for (double bi: doubles){
-					String[] writeDictionaryInput = new String[6];
+					String[] writeDictionaryInput = new String[NUM_FEATURES+3];
 					writeDictionaryInput[0] = args[0]+".train";
 					writeDictionaryInput[1] = String.valueOf(uni);
 					writeDictionaryInput[2] = String.valueOf(bi);
@@ -41,15 +43,19 @@ public class StoplistPercentExperimenter {
 					writeDictionaryInput[4] = "1";
 					writeDictionaryInput[5] = "1";
 					subsetString = "unigram:"+String.valueOf(uni)+"bigram:"+String.valueOf(bi);
+					
 					System.out.println(subsetString);
 					WriteDictionary.main(writeDictionaryInput);
 
-					boolean[] featureSelectorInput = new boolean[4];
+					boolean[] featureSelectorInput = new boolean[6];
 					featureSelectorInput[0] = true;
 					featureSelectorInput[1] = true;
 					featureSelectorInput[2] = false;
 					featureSelectorInput[3] = false;
+					featureSelectorInput[4] = false;
+					featureSelectorInput[5] = false;
 					new FeatureSelector(args[0], featureSelectorInput);
+
 
 					Runtime rt = Runtime.getRuntime();
 					Process pr = rt.exec("../svm_light/svm_learn "+args[0]+".train.features "+args[0]+"."+subsetString+".model");
@@ -74,7 +80,6 @@ public class StoplistPercentExperimenter {
 						writer.print(line+"\n");
 					}
 					writer.print("\n");
-
 				}
 			}
 		}

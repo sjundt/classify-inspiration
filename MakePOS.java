@@ -63,7 +63,6 @@ public class MakePOS {
 				writer.close();
 				reader.close();
 			}
-
 			//write the POS for each quotation to a new file
 			HashMap<String,Integer> numPOS; 
 			writer = new PrintWriter(new FileWriter(inputFile+".pos"));
@@ -71,6 +70,7 @@ public class MakePOS {
 			for (int j=1; j<=numQuotes; j++){
 				numPOS = new HashMap<String,Integer>();
 				reader = new BufferedReader(new FileReader(FILE_BASE+j+".pos"));
+				String posString = "";
 				while((line = reader.readLine())!=null){
 					while(line!=null && line.matches("\\s*")){
 						line = reader.readLine();
@@ -87,16 +87,23 @@ public class MakePOS {
 								String pos = match.group(2);
 								Integer num = numPOS.containsKey(pos) ? numPOS.get(pos) : 0;
 								numPOS.put(pos,num+1);
+								if (k==0 && pos.contains("VB")){
+									//first word in sentence is verb
+									posString = posString+"true ";
+								}
 							}	
 						}
 					}
 				}
 				reader.close();
-				String posString = "";
+				if (posString.equals("")){
+					posString = posString+"false ";
+				}
 				for (String key: numPOS.keySet()){
 					posString = posString + key+ ":"+numPOS.get(key)+" ";
 				}
 				writer.println(posString);
+				System.out.println(posString);
 			}
 			writer.close();
 		}

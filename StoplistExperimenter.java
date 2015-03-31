@@ -11,7 +11,7 @@ import java.util.*;
  */
 public class StoplistExperimenter {
 	private static final double STOPLIST_PARAM = 0.001;
-	private static final int NUM_FEATURES = 5;
+	private static final int NUM_FEATURES = 6;
 	/**
 	 * get dictionaries, gets featureFiles, train a model, and for each model,
 	 * run time and rand testing sets. Output results in results file.
@@ -56,11 +56,13 @@ public class StoplistExperimenter {
 				System.out.println(subsetString);
 				WriteDictionary.main(writeDictionaryInput);
 
-				boolean[] featureSelectorInput = new boolean[4];
+				boolean[] featureSelectorInput = new boolean[6];
 				featureSelectorInput[0] = true;
 				featureSelectorInput[1] = true;
 				featureSelectorInput[2] = false;
 				featureSelectorInput[3] = false;
+				featureSelectorInput[4] = false;
+				featureSelectorInput[5] = false;
 				new FeatureSelector(args[0], featureSelectorInput);
 
 

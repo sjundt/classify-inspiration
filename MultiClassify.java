@@ -18,7 +18,7 @@ public class MultiClassify {
 	 */
 	public static void main(String[] args) {
 		//unigrams, bigrams, sentiment, pos
-		int numFeatures = 4;
+		int numFeatures = 6;
 		PrintWriter writer = null;
 		String subsetString;
 		try {

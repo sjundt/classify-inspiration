@@ -74,6 +74,18 @@ BestWords.java
 
 
 
+~~~~~ MY DATASET:
+posneg
+posoverheard
+
+set aside testing files in data/results/test
+.train & .test in data/results for training
+
+*WriteDictionary each time you switch data sets
+
+
+
+
 
 
 
