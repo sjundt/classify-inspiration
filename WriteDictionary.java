@@ -289,17 +289,18 @@ public class WriteDictionary {
 
 	/**
 	 * Writes out the dictionary file for the input files
-	 * args- training file, top% stoplist unigrams, top% stoplist bigrams, removeUniqueUni, removeUniqueBi, removeBiFromDoubleUniRemoved
+	 * args- training file, top% stoplist unigrams, top% stoplist bigrams, removeBiFromDoubleUniRemoved
 	 */
 	public static void main(String[] args) {
-		if (args.length<6){
+		if (args.length<4){
 			throw new RuntimeException("Too few arguments. Please indicate a training file, double for unigrams, double for bigrams, three flags for removal");
 		}
 		List<String> inputFiles = new ArrayList<String>();
 		//first_pass: dictionary
 		inputFiles.add(args[0]);
 		List<String> posDataFiles = new ArrayList<String>();
-		new WriteDictionary(inputFiles, Double.parseDouble(args[1]), Double.parseDouble(args[2]), args[3].equals("1"), args[4].equals("1"), args[5].equals("1"));
+		//always removeUniqueUni, removeUniqueBi
+		new WriteDictionary(inputFiles, Double.parseDouble(args[1]), Double.parseDouble(args[2]), true, true, args[3].equals("1"));
 	}
 
 }

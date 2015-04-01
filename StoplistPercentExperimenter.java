@@ -10,7 +10,7 @@ import java.util.*;
  *
  */
 public class StoplistPercentExperimenter {
-	private static final int NUM_FEATURES = 6;
+	private static final int NUM_FEATURES = 1;
 	/**
 	 * get dictionaries, gets featureFiles, train a model, and for each model,
 	 * run time and rand testing sets. Output results in results file.
@@ -22,7 +22,7 @@ public class StoplistPercentExperimenter {
 		try {
 			String subsetString;
 			BufferedReader reader;
-			writer = new PrintWriter(new FileWriter(args[0]+".stoplist_percent_experiment_results.txt"));
+			writer = new PrintWriter(new FileWriter(args[0]+".stoplist_percent_experiment_results.sm.txt"));
 			
 
 			List<Double> doubles = new ArrayList<Double>();
@@ -39,8 +39,6 @@ public class StoplistPercentExperimenter {
 					writeDictionaryInput[1] = String.valueOf(uni);
 					writeDictionaryInput[2] = String.valueOf(bi);
 					writeDictionaryInput[3] = "1";
-					writeDictionaryInput[4] = "1";
-					writeDictionaryInput[5] = "1";
 					subsetString = "unigram:"+String.valueOf(uni)+"bigram:"+String.valueOf(bi);
 					
 					System.out.println(subsetString);
